@@ -14,8 +14,10 @@ from pathlib import Path
 import pystray
 from PIL import Image, ImageDraw
 
+from model_bootstrap import DEFAULT_MODEL_PATH, ensure_model
+
 ROOT = Path(__file__).resolve().parent
-MODEL_PATH = ROOT / "models" / "Huihui-Qwopus3.5-9B-v3-abliterated-Q4_K_M.gguf"
+MODEL_PATH = ROOT / DEFAULT_MODEL_PATH
 BACKEND_PORT = os.environ.get("ASSISTANT_BACKEND_PORT", "8080")
 FRONTEND_PORT = os.environ.get("ASSISTANT_FRONTEND_PORT", "4173")
 
@@ -117,6 +119,9 @@ class AssistantTray:
 
     def _monitor_backend_status(self) -> None:
         while not self._shutdown.is_set():
+            if self.backend_status == "Downloading model":
+                time.sleep(2)
+                continue
             backend_alive = self.backend_process is not None and self.backend_process.poll() is None
             if self._backend_is_healthy():
                 self._set_backend_status("Connected")
@@ -145,6 +150,9 @@ class AssistantTray:
         env["SKIP_PYODIDE_FETCH"] = "true"
 
         with self._state_lock:
+            if not MODEL_PATH.exists():
+                self._set_backend_status("Downloading model")
+            ensure_model(MODEL_PATH, env.get("LLAMA_MODEL_URL"))
             if self.backend_process is None or self.backend_process.poll() is not None:
                 self.backend_process = self._spawn(
                     [get_python(), "run-local.py", str(MODEL_PATH), BACKEND_PORT],

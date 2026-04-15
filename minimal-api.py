@@ -2,15 +2,19 @@ import os
 import sys
 import json
 import asyncio
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Optional, Union
 import llama_cpp
 
+from model_bootstrap import DEFAULT_MODEL_PATH, ensure_model
+
 app = FastAPI(title="Open WebUI Minimal API")
 
-MODEL_PATH = os.environ.get("LLAMA_MODEL_PATH", "models/Huihui-Qwopus3.5-9B-v3-abliterated-Q4_K_M.gguf")
+ROOT = Path(__file__).resolve().parent
+MODEL_PATH = os.environ.get("LLAMA_MODEL_PATH", str(ROOT / DEFAULT_MODEL_PATH))
 CONTEXT_SIZE = int(os.environ.get("LLAMA_CONTEXT_SIZE", "4096"))
 THREADS = int(os.environ.get("LLAMA_THREADS", "4"))
 
@@ -30,6 +34,7 @@ class ChatRequest(BaseModel):
 @app.on_event("startup")
 async def startup():
     global llm
+    ensure_model(Path(MODEL_PATH))
     print(f"Loading model: {MODEL_PATH}")
     llm = llama_cpp.Llama(
         model_path=MODEL_PATH,

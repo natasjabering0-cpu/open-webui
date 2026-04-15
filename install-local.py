@@ -10,6 +10,8 @@ import sys
 import venv
 from pathlib import Path
 
+from model_bootstrap import DEFAULT_MODEL_PATH, ensure_model
+
 ROOT = Path(__file__).resolve().parent
 LLAMA_CPP_VERSION = "0.3.20"
 
@@ -96,6 +98,7 @@ def main() -> int:
 
     build_frontend(ROOT)
     (ROOT / "data").mkdir(exist_ok=True)
+    ensure_model(ROOT / DEFAULT_MODEL_PATH)
 
     print("\nInstallation complete.")
     print("Run:")

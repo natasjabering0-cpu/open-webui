@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 import os, sys, subprocess, json
+from pathlib import Path
 
-MODEL = "models/Huihui-Qwopus3.5-9B-v3-abliterated-Q4_K_M.gguf"
+from model_bootstrap import DEFAULT_MODEL_PATH, ensure_model
+
+ROOT = Path(__file__).resolve().parent
+MODEL = str(ROOT / DEFAULT_MODEL_PATH)
 PORT = "3000"
 
-if not os.path.exists(MODEL):
-    print(f"Model not found: {MODEL}")
-    sys.exit(1)
+ensure_model(Path(MODEL))
 
 env = os.environ.copy()
 env["LLAMA_MODEL_PATH"] = os.path.abspath(MODEL)
 env["LLAMA_CONTEXT_SIZE"] = "4096"
 env["LLAMA_THREADS"] = "4"
 env["WEBUI_PORT"] = PORT
-env["DATA_DIR"] = "/home/larslouvre/Hentet/py-gpt-master (2)/open-webui/data"
+env["DATA_DIR"] = str(ROOT / "data")
 
 print(f"Model: {MODEL}")
 print(f"Port: {PORT}")

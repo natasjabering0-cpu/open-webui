@@ -8,8 +8,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+from model_bootstrap import DEFAULT_MODEL_PATH, ensure_model
+
 ROOT = Path(__file__).resolve().parent
-DEFAULT_MODEL = ROOT / "models" / "Huihui-Qwopus3.5-9B-v3-abliterated-Q4_K_M.gguf"
+DEFAULT_MODEL = ROOT / DEFAULT_MODEL_PATH
 
 
 def get_python() -> str:
@@ -40,9 +42,10 @@ def main() -> int:
     port = sys.argv[2] if len(sys.argv) > 2 else "8080"
     model_name = os.environ.get("LLAMA_MODEL_NAME", "Legend")
 
-    if not model.exists():
-        print(f"Model not found: {model}")
-        print("Run ./install-local.sh first or pass a valid .gguf path.")
+    try:
+        ensure_model(model, os.environ.get("LLAMA_MODEL_URL"))
+    except Exception as exc:
+        print(str(exc))
         return 1
 
     model_id = model.name
