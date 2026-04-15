@@ -14,7 +14,9 @@ Set-Location $Root
 function Invoke-WingetInstall {
     param(
         [string]$Id,
-        [string]$Name
+        [string]$Name,
+        [string]$Scope = 'user',
+        [string]$Override
     )
 
     $winget = Get-Command winget -ErrorAction SilentlyContinue
@@ -22,16 +24,25 @@ function Invoke-WingetInstall {
         throw "$Name is missing and winget was not found. Install $Name manually, then rerun this installer."
     }
 
-    Invoke-CommandLine -FilePath $winget.Source -Arguments @(
+    $arguments = @(
         'install',
         '--id', $Id,
         '-e',
         '--source', 'winget',
-        '--scope', 'user',
         '--silent',
         '--accept-package-agreements',
         '--accept-source-agreements'
-    ) -WorkingDirectory $Root
+    )
+
+    if ($Scope) {
+        $arguments += @('--scope', $Scope)
+    }
+
+    if ($Override) {
+        $arguments += @('--override', $Override)
+    }
+
+    Invoke-CommandLine -FilePath $winget.Source -Arguments $arguments -WorkingDirectory $Root
 }
 
 function Test-PythonVersion {
@@ -180,6 +191,75 @@ function Ensure-CudaToolkit {
     Start-Sleep -Seconds 5
 }
 
+function Get-CMakePath {
+    $cmake = Get-Command cmake -ErrorAction SilentlyContinue
+    if ($cmake) {
+        return $cmake.Source
+    }
+
+    foreach ($candidate in @(
+        (Join-Path $env:ProgramFiles 'CMake\bin\cmake.exe'),
+        (Join-Path ${env:ProgramFiles(x86)} 'CMake\bin\cmake.exe'),
+        (Join-Path $env:LOCALAPPDATA 'Programs\CMake\bin\cmake.exe')
+    )) {
+        if ($candidate -and (Test-Path $candidate)) {
+            return $candidate
+        }
+    }
+
+    return $null
+}
+
+function Ensure-CMake {
+    $cmakePath = Get-CMakePath
+    if ($cmakePath) {
+        $env:PATH = "$(Split-Path $cmakePath -Parent);$env:PATH"
+        return
+    }
+
+    Write-Host 'CMake not found. Installing Kitware CMake via winget...'
+    Invoke-WingetInstall -Id 'Kitware.CMake' -Name 'CMake'
+    Start-Sleep -Seconds 5
+
+    $cmakePath = Get-CMakePath
+    if (-not $cmakePath) {
+        throw 'CMake was installed, but the installer still cannot find cmake.exe.'
+    }
+
+    $env:PATH = "$(Split-Path $cmakePath -Parent);$env:PATH"
+}
+
+function Test-BuildToolsInstalled {
+    $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+    if (Test-Path $vswhere) {
+        $installationPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath 2>$null
+        if ($installationPath) {
+            return $true
+        }
+    }
+
+    foreach ($candidate in @(
+        (Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\2022\BuildTools'),
+        (Join-Path $env:ProgramFiles 'Microsoft Visual Studio\2022\BuildTools')
+    )) {
+        if ($candidate -and (Test-Path $candidate)) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
+function Ensure-BuildTools {
+    if (Test-BuildToolsInstalled) {
+        return
+    }
+
+    Write-Host 'Visual C++ build tools not found. Installing Visual Studio Build Tools...'
+    Invoke-WingetInstall -Id 'Microsoft.VisualStudio.2022.BuildTools' -Name 'Visual Studio Build Tools' -Scope '' -Override '--wait --quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --norestart'
+    Start-Sleep -Seconds 10
+}
+
 function Invoke-CommandLine {
     param(
         [string]$FilePath,
@@ -254,6 +334,8 @@ $env:NPM_COMMAND = $npmCommand
 
 if ($LlamaBackend -eq 'cuda') {
     Ensure-CudaToolkit
+    Ensure-CMake
+    Ensure-BuildTools
 }
 
 $pythonCommandArray = @($pythonCommand.FilePath) + $pythonCommand.Arguments

@@ -176,7 +176,7 @@ For the local tray app and Open WebUI setup on a clean Windows machine, run:
 install-windows.bat
 ```
 
-It bootstraps Python and Node.js with `winget` when they are missing, installs the local environment, builds the frontend, and creates shortcuts for **Legend Tray** and **Open WebUI Server**. The tray app opens WebUI on double click, shows backend connection state in its menu, and exits cleanly from the tray menu. Use `install-windows.bat cuda` if you want the CUDA-flavored llama backend; the installer will also try to install the NVIDIA CUDA Toolkit, but a matching NVIDIA display driver still has to be present on the machine.
+It bootstraps Python and Node.js with `winget` when they are missing, installs the local environment, builds the frontend, and creates shortcuts for **Legend Tray** and **Open WebUI Server**. The tray app opens WebUI on double click, shows backend connection state in its menu, and exits cleanly from the tray menu. Use `install-windows.bat cuda` if you want the CUDA-flavored llama backend; the installer will also try to install the NVIDIA CUDA Toolkit plus the build tools it needs, but a matching NVIDIA display driver still has to be present on the machine.
 
 ### Other Installation Methods
 
