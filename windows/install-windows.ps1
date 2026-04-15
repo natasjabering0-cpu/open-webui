@@ -169,6 +169,17 @@ function Ensure-Node {
     return $npm
 }
 
+function Ensure-CudaToolkit {
+    $nvidiaSmi = Get-Command nvidia-smi -ErrorAction SilentlyContinue
+    if (-not $nvidiaSmi) {
+        Write-Warning 'No NVIDIA driver was detected. The CUDA Toolkit can still install, but CUDA acceleration also needs a compatible NVIDIA driver from NVIDIA.'
+    }
+
+    Write-Host 'Installing NVIDIA CUDA Toolkit via winget...'
+    Invoke-WingetInstall -Id 'Nvidia.CUDA' -Name 'NVIDIA CUDA Toolkit'
+    Start-Sleep -Seconds 5
+}
+
 function Invoke-CommandLine {
     param(
         [string]$FilePath,
@@ -240,6 +251,11 @@ function Get-VenvPython {
 $pythonCommand = Ensure-Python
 $npmCommand = Ensure-Node
 $env:NPM_COMMAND = $npmCommand
+
+if ($LlamaBackend -eq 'cuda') {
+    Ensure-CudaToolkit
+}
+
 $pythonCommandArray = @($pythonCommand.FilePath) + $pythonCommand.Arguments
 Invoke-PythonScript -PythonCommand $pythonCommandArray -ScriptArguments @('install-local.py', '--llama-backend', $LlamaBackend) -WorkingDirectory $Root
 
