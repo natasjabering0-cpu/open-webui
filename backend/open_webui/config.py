@@ -1214,22 +1214,40 @@ DEFAULT_PROMPT_SUGGESTIONS = PersistentConfig(
     default_prompt_suggestions,
 )
 
+try:
+    model_order_list = json.loads(os.environ.get('MODEL_ORDER_LIST', '[]'))
+except Exception as e:
+    log.exception(f'Error loading MODEL_ORDER_LIST: {e}')
+    model_order_list = []
+
 MODEL_ORDER_LIST = PersistentConfig(
     'MODEL_ORDER_LIST',
     'ui.model_order_list',
-    [],
+    model_order_list,
 )
+
+try:
+    default_model_metadata = json.loads(os.environ.get('DEFAULT_MODEL_METADATA', '{}'))
+except Exception as e:
+    log.exception(f'Error loading DEFAULT_MODEL_METADATA: {e}')
+    default_model_metadata = {}
 
 DEFAULT_MODEL_METADATA = PersistentConfig(
     'DEFAULT_MODEL_METADATA',
     'models.default_metadata',
-    {},
+    default_model_metadata,
 )
+
+try:
+    default_model_params = json.loads(os.environ.get('DEFAULT_MODEL_PARAMS', '{}'))
+except Exception as e:
+    log.exception(f'Error loading DEFAULT_MODEL_PARAMS: {e}')
+    default_model_params = {}
 
 DEFAULT_MODEL_PARAMS = PersistentConfig(
     'DEFAULT_MODEL_PARAMS',
     'models.default_params',
-    {},
+    default_model_params,
 )
 
 DEFAULT_USER_ROLE = PersistentConfig(

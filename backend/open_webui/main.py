@@ -97,6 +97,7 @@ from open_webui.routers import (
     utils,
     scim,
     terminals,
+    llama_cpp,
 )
 
 from open_webui.routers.retrieval import (
@@ -1486,6 +1487,7 @@ app.mount('/ws', socket_app)
 
 app.include_router(ollama.router, prefix='/ollama', tags=['ollama'])
 app.include_router(openai.router, prefix='/openai', tags=['openai'])
+app.include_router(llama_cpp.router, tags=['llama-cpp'])
 
 
 app.include_router(pipelines.router, prefix='/api/v1/pipelines', tags=['pipelines'])

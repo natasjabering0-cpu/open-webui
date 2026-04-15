@@ -7,6 +7,7 @@
 		banners,
 		chatId,
 		config,
+		models,
 		mobile,
 		settings,
 		showArchivedChats,
@@ -111,7 +112,7 @@
 			{$showSidebar ? 'ml-1' : ''}
 			"
 				>
-					{#if showModelSelector}
+					{#if showModelSelector && $models.length > 1}
 						<ModelSelector bind:selectedModels showSetDefault={!shareEnabled} />
 					{/if}
 				</div>

@@ -24,9 +24,21 @@ const packages = [
 // typing_extensions, etc.) do NOT need to be listed here.
 const pypiPackages = ['black', 'pathspec', 'mypy_extensions'];
 
-import { loadPyodide } from 'pyodide';
-import { setGlobalDispatcher, ProxyAgent } from 'undici';
 import { writeFile, readFile, copyFile, readdir, rmdir, access } from 'fs/promises';
+
+if ((process.env.SKIP_PYODIDE_FETCH || '').toLowerCase() === 'true') {
+	console.log('Skipping Pyodide preparation (SKIP_PYODIDE_FETCH=true)');
+	process.exit(0);
+}
+
+const { loadPyodide } = await import('pyodide');
+let setGlobalDispatcher = null;
+let ProxyAgent = null;
+try {
+	({ setGlobalDispatcher, ProxyAgent } = await import('undici'));
+} catch {
+	console.warn('undici not available, skipping proxy support for Pyodide preparation');
+}
 
 /**
  * Loading network proxy configurations from the environment variables.
@@ -46,6 +58,7 @@ function initNetworkProxyFromEnv() {
 	 * @see https://github.com/nodejs/undici/issues/2224
 	 */
 	if (!preferedProxy || !preferedProxy.startsWith('http')) return;
+	if (!setGlobalDispatcher || !ProxyAgent) return;
 	let preferedProxyURL;
 	try {
 		preferedProxyURL = new URL(preferedProxy).toString();

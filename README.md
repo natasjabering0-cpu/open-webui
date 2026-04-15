@@ -168,6 +168,16 @@ Both commands facilitate a built-in, hassle-free installation of both Open WebUI
 
 After installation, you can access Open WebUI at [http://localhost:3000](http://localhost:3000). Enjoy! 😄
 
+### Windows Installer
+
+For the local tray app and Open WebUI setup on Windows, run:
+
+```bat
+install-windows.bat
+```
+
+It installs the local environment, builds the frontend, and creates shortcuts for **Legend Tray** and **Open WebUI Server**. Use `install-windows.bat cuda` if you want the CUDA-flavored llama backend.
+
 ### Other Installation Methods
 
 We offer various installation alternatives, including non-Docker native installation methods, Docker Compose, Kustomize, and Helm. Visit our [Open WebUI Documentation](https://docs.openwebui.com/getting-started/) or join our [Discord community](https://discord.gg/5rJgQTnV4s) for comprehensive guidance.

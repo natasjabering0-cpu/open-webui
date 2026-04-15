@@ -30,6 +30,7 @@ from open_webui.routers.openai import (
 from open_webui.routers.ollama import (
     generate_chat_completion as generate_ollama_chat_completion,
 )
+from open_webui.apps.llama_cpp import generate_openai_chat_completion as generate_llama_cpp_chat_completion
 
 from open_webui.routers.pipelines import (
     process_pipeline_inlet_filter,
@@ -274,6 +275,8 @@ async def generate_chat_completion(
         if model.get('pipe'):
             # Below does not require bypass_filter because this is the only route the uses this function and it is already bypassing the filter
             return await generate_function_chat_completion(request, form_data, user=user, models=models)
+        if model.get('owned_by') == 'llama_cpp':
+            return await generate_llama_cpp_chat_completion(form_data)
         if model.get('owned_by') == 'ollama':
             # Using /ollama/api/chat endpoint
             form_data = convert_payload_openai_to_ollama(form_data)

@@ -131,6 +131,10 @@ oracledb==3.4.2
 
 av==14.0.1 # Caution: Set due to FATAL FIPS SELFTEST FAILURE, see discussion https://github.com/open-webui/open-webui/discussions/15720
 
+## llama.cpp integration (custom builder)
+llama-cpp-python==0.3.20
+pystray==0.19.5
+
 colbert-ai==0.2.22
 
 
