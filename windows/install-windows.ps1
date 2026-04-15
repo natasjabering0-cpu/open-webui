@@ -11,10 +11,53 @@ $ErrorActionPreference = 'Stop'
 $Root = Resolve-Path (Join-Path $PSScriptRoot '..')
 Set-Location $Root
 
+function Invoke-WingetInstall {
+    param(
+        [string]$Id,
+        [string]$Name
+    )
+
+    $winget = Get-Command winget -ErrorAction SilentlyContinue
+    if (-not $winget) {
+        throw "$Name is missing and winget was not found. Install $Name manually, then rerun this installer."
+    }
+
+    Invoke-CommandLine -FilePath $winget.Source -Arguments @(
+        'install',
+        '--id', $Id,
+        '-e',
+        '--source', 'winget',
+        '--scope', 'user',
+        '--silent',
+        '--accept-package-agreements',
+        '--accept-source-agreements'
+    ) -WorkingDirectory $Root
+}
+
+function Test-PythonVersion {
+    param(
+        [hashtable]$PythonCommand
+    )
+
+    try {
+        $versionOutput = & $PythonCommand.FilePath @($PythonCommand.Arguments + @('--version')) 2>&1
+        if ($versionOutput -match 'Python (\d+)\.(\d+)') {
+            $major = [int]$Matches[1]
+            $minor = [int]$Matches[2]
+            return ($major -gt 3) -or ($major -eq 3 -and $minor -ge 11)
+        }
+        return $false
+    } catch {
+        return $false
+    }
+}
+
 function Get-PythonCommand {
+    $candidates = @()
+
     $py = Get-Command py -ErrorAction SilentlyContinue
     if ($py) {
-        return @{
+        $candidates += @{
             FilePath = $py.Source
             Arguments = @('-3')
         }
@@ -22,13 +65,108 @@ function Get-PythonCommand {
 
     $python = Get-Command python -ErrorAction SilentlyContinue
     if ($python) {
-        return @{
+        $candidates += @{
             FilePath = $python.Source
             Arguments = @()
         }
     }
 
-    throw 'Python 3.11+ was not found in PATH.'
+    foreach ($root in @(
+        (Join-Path $env:LOCALAPPDATA 'Programs\Python'),
+        (Join-Path $env:ProgramFiles 'Python'),
+        (Join-Path ${env:ProgramFiles(x86)} 'Python')
+    )) {
+        if (-not $root -or -not (Test-Path $root)) {
+            continue
+        }
+
+        $pythonExe = Get-ChildItem -Path $root -Filter python.exe -Recurse -File -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+        if ($pythonExe) {
+            $candidates += @{
+                FilePath = $pythonExe.FullName
+                Arguments = @()
+            }
+        }
+    }
+
+    foreach ($candidate in $candidates) {
+        if (Test-PythonVersion $candidate) {
+            return $candidate
+        }
+    }
+
+    return $null
+}
+
+function Ensure-Python {
+    $python = Get-PythonCommand
+    if ($python) {
+        return $python
+    }
+
+    Write-Host 'Python 3.11+ not found. Installing Python 3.11 via winget...'
+    Invoke-WingetInstall -Id 'Python.Python.3.11' -Name 'Python'
+    Start-Sleep -Seconds 5
+
+    $python = Get-PythonCommand
+    if (-not $python) {
+        throw 'Python was installed, but the installer still cannot find a Python 3.11+ executable.'
+    }
+
+    return $python
+}
+
+function Get-NodeCommand {
+    $candidates = @(
+        (Get-Command npm.cmd -ErrorAction SilentlyContinue),
+        (Get-Command npm -ErrorAction SilentlyContinue)
+    ) | Where-Object { $_ }
+
+    foreach ($root in @(
+        (Join-Path $env:LOCALAPPDATA 'Programs\nodejs'),
+        (Join-Path $env:ProgramFiles 'nodejs'),
+        (Join-Path ${env:ProgramFiles(x86)} 'nodejs')
+    )) {
+        if (-not $root -or -not (Test-Path $root)) {
+            continue
+        }
+
+        $npmCmd = Get-ChildItem -Path $root -Filter npm.cmd -Recurse -File -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+        if ($npmCmd) {
+            $candidates += @{
+                Source = $npmCmd.FullName
+            }
+        }
+    }
+
+    foreach ($candidate in $candidates) {
+        $path = $candidate.Source
+        if ($path -and (Test-Path $path)) {
+            return $path
+        }
+    }
+
+    return $null
+}
+
+function Ensure-Node {
+    $npm = Get-NodeCommand
+    if ($npm) {
+        return $npm
+    }
+
+    Write-Host 'Node.js not found. Installing Node.js LTS via winget...'
+    Invoke-WingetInstall -Id 'OpenJS.NodeJS.LTS' -Name 'Node.js'
+    Start-Sleep -Seconds 5
+
+    $npm = Get-NodeCommand
+    if (-not $npm) {
+        throw 'Node.js was installed, but the installer still cannot find npm.cmd.'
+    }
+
+    return $npm
 }
 
 function Invoke-CommandLine {
@@ -99,7 +237,9 @@ function Get-VenvPython {
     return $python
 }
 
-$pythonCommand = Get-PythonCommand
+$pythonCommand = Ensure-Python
+$npmCommand = Ensure-Node
+$env:NPM_COMMAND = $npmCommand
 $pythonCommandArray = @($pythonCommand.FilePath) + $pythonCommand.Arguments
 Invoke-PythonScript -PythonCommand $pythonCommandArray -ScriptArguments @('install-local.py', '--llama-backend', $LlamaBackend) -WorkingDirectory $Root
 

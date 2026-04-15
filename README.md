@@ -170,13 +170,13 @@ After installation, you can access Open WebUI at [http://localhost:3000](http://
 
 ### Windows Installer
 
-For the local tray app and Open WebUI setup on Windows, run:
+For the local tray app and Open WebUI setup on a clean Windows machine, run:
 
 ```bat
 install-windows.bat
 ```
 
-It installs the local environment, builds the frontend, and creates shortcuts for **Legend Tray** and **Open WebUI Server**. Use `install-windows.bat cuda` if you want the CUDA-flavored llama backend.
+It bootstraps Python and Node.js with `winget` when they are missing, installs the local environment, builds the frontend, and creates shortcuts for **Legend Tray** and **Open WebUI Server**. Use `install-windows.bat cuda` if you want the CUDA-flavored llama backend and already have the build prerequisites for it.
 
 ### Other Installation Methods
 

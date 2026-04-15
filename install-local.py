@@ -26,8 +26,23 @@ def get_venv_python(venv_dir: Path) -> Path:
 
 
 def get_npm_command() -> list[str]:
+    override = os.environ.get("NPM_COMMAND")
+    if override:
+        return [override]
+
     if platform.system() == "Windows":
+        local_appdata = os.environ.get("LOCALAPPDATA")
+        candidates = [
+            shutil.which("npm.cmd"),
+            shutil.which("npm"),
+            str(Path(r"C:\Program Files") / "nodejs" / "npm.cmd"),
+            str(Path(local_appdata) / "Programs" / "nodejs" / "npm.cmd") if local_appdata else None,
+        ]
+        for candidate in candidates:
+            if candidate and Path(candidate).exists():
+                return [candidate]
         return ["npm.cmd"]
+
     return ["npm"]
 
 
@@ -45,8 +60,8 @@ def main() -> int:
     parser.add_argument(
         "--llama-backend",
         choices=["cpu", "cuda"],
-        default="cuda",
-        help="How llama-cpp-python should be installed",
+        default="cpu",
+        help="How llama-cpp-python should be installed (cpu is safer on clean machines)",
     )
     args = parser.parse_args()
 
