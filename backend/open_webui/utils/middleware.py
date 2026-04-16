@@ -2535,12 +2535,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                             if metadata and metadata.get('message_id'):
                                 headers[FORWARD_SESSION_INFO_HEADER_MESSAGE_ID] = metadata.get('message_id')
 
-                        mcp_clients[server_id] = MCPClient()
-                        await mcp_clients[server_id].connect(
-                            url=mcp_server_connection.get('url', ''),
-                            headers=headers if headers else None,
-                        )
-
+                        cached_client = request.app.state.MCP_CLIENTS.get(server_id)
                         function_name_filter_list = mcp_server_connection.get('config', {}).get(
                             'function_name_filter_list', ''
                         )
@@ -2548,7 +2543,24 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                         if isinstance(function_name_filter_list, str):
                             function_name_filter_list = function_name_filter_list.split(',')
 
-                        tool_specs = await mcp_clients[server_id].list_tool_specs()
+                        if cached_client and cached_client.session:
+                            mcp_clients[server_id] = cached_client
+                            cached_tool_specs = request.app.state.MCP_TOOL_SPECS.get(server_id)
+                            tool_specs = cached_tool_specs if cached_tool_specs else []
+                        else:
+                            mcp_clients[server_id] = MCPClient()
+                            await mcp_clients[server_id].connect(
+                                url=mcp_server_connection.get('url', ''),
+                                headers=headers if headers else None,
+                            )
+
+                            tool_specs = await mcp_clients[server_id].list_tool_specs()
+
+                            request.app.state.MCP_CLIENTS[server_id] = mcp_clients[server_id]
+                            request.app.state.MCP_TOOL_SPECS[server_id] = tool_specs
+
+                        if not tool_specs:
+                            tool_specs = await mcp_clients[server_id].list_tool_specs()
                         for tool_spec in tool_specs:
 
                             def make_tool_function(client, function_name):

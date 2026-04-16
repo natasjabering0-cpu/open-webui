@@ -3796,28 +3796,48 @@ DEEPGRAM_API_KEY = PersistentConfig(
 # ElevenLabs configuration
 ELEVENLABS_API_BASE_URL = os.getenv('ELEVENLABS_API_BASE_URL', 'https://api.elevenlabs.io')
 
+DEFAULT_AUDIO_STT_OPENAI_API_BASE_URL = os.getenv(
+    'AUDIO_STT_OPENAI_API_BASE_URL',
+    'https://api.groq.com/openai/v1' if os.getenv('GROQ_API_KEY', '') else OPENAI_API_BASE_URL,
+)
+
+DEFAULT_AUDIO_STT_OPENAI_API_KEY = os.getenv(
+    'AUDIO_STT_OPENAI_API_KEY',
+    os.getenv('GROQ_API_KEY', OPENAI_API_KEY),
+)
+
+DEFAULT_AUDIO_STT_ENGINE = os.getenv(
+    'AUDIO_STT_ENGINE',
+    'openai' if os.getenv('GROQ_API_KEY', '') else '',
+)
+
+DEFAULT_AUDIO_STT_MODEL = os.getenv(
+    'AUDIO_STT_MODEL',
+    'whisper-large-v3-turbo' if os.getenv('GROQ_API_KEY', '') else '',
+)
+
 AUDIO_STT_OPENAI_API_BASE_URL = PersistentConfig(
     'AUDIO_STT_OPENAI_API_BASE_URL',
     'audio.stt.openai.api_base_url',
-    os.getenv('AUDIO_STT_OPENAI_API_BASE_URL', OPENAI_API_BASE_URL),
+    DEFAULT_AUDIO_STT_OPENAI_API_BASE_URL,
 )
 
 AUDIO_STT_OPENAI_API_KEY = PersistentConfig(
     'AUDIO_STT_OPENAI_API_KEY',
     'audio.stt.openai.api_key',
-    os.getenv('AUDIO_STT_OPENAI_API_KEY', OPENAI_API_KEY),
+    DEFAULT_AUDIO_STT_OPENAI_API_KEY,
 )
 
 AUDIO_STT_ENGINE = PersistentConfig(
     'AUDIO_STT_ENGINE',
     'audio.stt.engine',
-    os.getenv('AUDIO_STT_ENGINE', ''),
+    DEFAULT_AUDIO_STT_ENGINE,
 )
 
 AUDIO_STT_MODEL = PersistentConfig(
     'AUDIO_STT_MODEL',
     'audio.stt.model',
-    os.getenv('AUDIO_STT_MODEL', ''),
+    DEFAULT_AUDIO_STT_MODEL,
 )
 
 AUDIO_STT_SUPPORTED_CONTENT_TYPES = PersistentConfig(

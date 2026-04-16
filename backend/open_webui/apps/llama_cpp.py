@@ -8,6 +8,7 @@ from typing import Any, AsyncGenerator, Optional
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from open_webui.apps.hf_model_catalog import resolve_llama_cpp_model_path
 from open_webui.utils.misc import (
     openai_chat_chunk_message_template,
     openai_chat_completion_message_template,
@@ -121,7 +122,7 @@ class LlamaCpp:
             log.error("llama-cpp-python not installed. Run the local installer first.")
             raise
 
-    def load_model(self, model_path: str, **kwargs) -> bool:
+    def load_model(self, model_path: str, model_reference: Optional[str] = None, **kwargs) -> bool:
         if not os.path.exists(model_path):
             log.error("Model not found: %s", model_path)
             return False
@@ -139,8 +140,10 @@ class LlamaCpp:
             )
             self._loaded = True
             llama_cpp_config.model_loaded = True
-            llama_cpp_config.current_model = llama_cpp_config.model_name or _get_model_id(model_path)
-            log.info("Loaded llama.cpp model: %s", model_path)
+            llama_cpp_config.current_model = (
+                llama_cpp_config.model_name or model_reference or _get_model_id(model_path)
+            )
+            log.info("Loaded llama.cpp model: %s", model_reference or model_path)
             return True
         except Exception as exc:
             log.exception("Failed to load llama.cpp model: %s", exc)
@@ -243,15 +246,23 @@ class LlamaCpp:
 llama_cpp = LlamaCpp()
 
 
+def _resolve_model_reference(model_reference: str) -> str:
+    if os.path.exists(model_reference):
+        return model_reference
+    return resolve_llama_cpp_model_path(model_reference)
+
+
 def get_configured_model() -> Optional[dict[str, Any]]:
-    model_path = llama_cpp_config.model_path
-    if not model_path:
+    model_reference = llama_cpp_config.model_path
+    if not model_reference:
         return None
 
-    path = Path(model_path)
-    if not path.exists():
+    try:
+        resolved_model_path = _resolve_model_reference(model_reference)
+    except (FileNotFoundError, RuntimeError):
         return None
 
+    path = Path(resolved_model_path)
     stat = path.stat()
     model_id = _get_model_id(str(path))
     model_name = llama_cpp_config.model_name or path.stem
@@ -270,6 +281,7 @@ def get_configured_model() -> Optional[dict[str, Any]]:
         },
         "llama_cpp": {
             "path": str(path),
+            "model_reference": model_reference,
             "context_size": llama_cpp_config.context_size,
             "threads": llama_cpp_config.threads,
             "gpu_layers": llama_cpp_config.gpu_layers,
@@ -286,21 +298,32 @@ async def ensure_model_loaded() -> None:
     if not llama_cpp_config.is_configured():
         raise RuntimeError("LLAMA_MODEL_PATH is not configured")
 
-    if not llama_cpp.load_model(llama_cpp_config.model_path):
-        raise RuntimeError(f"Failed to load model: {llama_cpp_config.model_path}")
+    model_reference = llama_cpp_config.model_path
+    resolved_path = _resolve_model_reference(model_reference)
+    if not llama_cpp.load_model(resolved_path, model_reference=model_reference):
+        raise RuntimeError(f"Failed to load model: {model_reference}")
 
 
 async def load_model(model_path: str = None) -> dict[str, Any]:
-    path = model_path or llama_cpp_config.model_path
-    if not path:
+    model_reference = model_path or llama_cpp_config.model_path
+    if not model_reference:
         return {
             "success": False,
             "error": "No model path specified. Set LLAMA_MODEL_PATH.",
         }
 
-    success = llama_cpp.load_model(path)
+    try:
+        resolved_path = _resolve_model_reference(model_reference)
+    except (FileNotFoundError, RuntimeError) as exc:
+        return {
+            "success": False,
+            "error": str(exc),
+        }
+
+    success = llama_cpp.load_model(resolved_path, model_reference=model_reference)
     return {
         "success": success,
+        "resolved_model_path": resolved_path,
         "error": None if success else "Failed to load model",
     }
 

@@ -257,10 +257,16 @@
 								placeholder={$i18n.t('API Base URL')}
 								bind:value={STT_OPENAI_API_BASE_URL}
 								required
+								list="stt-openai-base-url-list"
 							/>
 
 							<SensitiveInput placeholder={$i18n.t('API Key')} bind:value={STT_OPENAI_API_KEY} />
 						</div>
+
+						<datalist id="stt-openai-base-url-list">
+							<option value="https://api.groq.com/openai/v1"></option>
+							<option value="https://api.openai.com/v1"></option>
+						</datalist>
 					</div>
 
 					<hr class="border-gray-100/30 dark:border-gray-850/30 my-2" />
@@ -277,7 +283,8 @@
 								/>
 
 								<datalist id="model-list">
-									<option value="whisper-1" />
+									<option value="whisper-large-v3-turbo"></option>
+									<option value="whisper-1"></option>
 								</datalist>
 							</div>
 						</div>

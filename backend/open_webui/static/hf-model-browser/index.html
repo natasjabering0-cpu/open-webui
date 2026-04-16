@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HF Model Browser</title>
+    <link rel="stylesheet" href="/static/hf-model-browser/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Master Open WebUI</p>
+          <h1>Hugging Face modelbrowser til Llama.cpp</h1>
+          <p class="lede">
+            Søg, filtrer og deploy GGUF/GGML-modeller direkte fra den lokale `hf_models.db`
+            katalogdatabase.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button id="syncCatalogButton" class="secondary">Opdater katalog</button>
+          <a class="secondary" href="/api/v1/hf-models/browser">Åbn isoleret view</a>
+        </div>
+      </header>
+
+      <section class="layout">
+        <aside class="panel filters">
+          <h2>Filtre</h2>
+
+          <label class="field">
+            <span>Modelnavn</span>
+            <input id="searchInput" type="search" list="modelSuggestions" placeholder="fx TheBloke" />
+            <datalist id="modelSuggestions"></datalist>
+          </label>
+
+          <div class="field">
+            <span>Tags</span>
+            <div id="tagFilters" class="chips"></div>
+          </div>
+
+          <div class="field">
+            <span>Format</span>
+            <div id="formatFilters" class="chips"></div>
+          </div>
+
+          <div class="field">
+            <span>Kvantisering</span>
+            <div id="quantizationFilters" class="chips"></div>
+          </div>
+
+          <label class="check-row">
+            <input id="favoritesOnly" type="checkbox" />
+            <span>Kun favoritter</span>
+          </label>
+
+          <label class="check-row">
+            <input id="compatibleOnly" type="checkbox" />
+            <span>Kun Llama.cpp-kompatible</span>
+          </label>
+
+          <label class="field">
+            <span>Sortering</span>
+            <select id="sortSelect">
+              <option value="newest" selected>Nyeste uploads først</option>
+              <option value="oldest">Ældste uploads først</option>
+            </select>
+          </label>
+
+          <div class="saved-filter-box">
+            <div class="saved-filter-header">
+              <h3>Gemte filtre</h3>
+              <button id="saveFilterButton" class="secondary small">Gem nuværende</button>
+            </div>
+            <div id="savedFilters" class="saved-filters"></div>
+          </div>
+        </aside>
+
+        <section class="content">
+          <div class="toolbar">
+            <div>
+              <h2>Modelkort</h2>
+              <p id="catalogStatus" class="muted">Henter katalog...</p>
+            </div>
+            <div class="result-count">
+              <strong id="resultCount">0</strong>
+              <span>modeller</span>
+            </div>
+          </div>
+
+          <div id="cards" class="cards"></div>
+          <div id="emptyState" class="empty hidden">
+            Ingen modeller matchede filtrene.
+          </div>
+
+          <section class="panel deployment">
+            <div class="deployment-header">
+              <div>
+                <h2>Deployment-generator</h2>
+                <p class="muted">
+                  Template-spec og Docker bundle genereres fra den valgte model uden at ændre
+                  template-koden.
+                </p>
+              </div>
+              <span id="selectedModelLabel" class="selected-model">Ingen model valgt</span>
+            </div>
+
+            <form id="deploymentForm" class="deployment-form">
+              <label class="field">
+                <span>Template</span>
+                <select id="templateSelect">
+                  <option value="simple-agent">simple-agent</option>
+                  <option value="RAG-agent">RAG-agent</option>
+                </select>
+              </label>
+
+              <label class="check-row">
+                <input id="memoryToggle" type="checkbox" />
+                <span>Aktiver memory</span>
+              </label>
+
+              <label class="field">
+                <span>Tools (kommasepareret)</span>
+                <input id="toolsInput" type="text" placeholder="retrieval, calculator" />
+              </label>
+
+              <div class="actions">
+                <button id="generateBundleButton" type="submit">Generer deploy bundle</button>
+              </div>
+            </form>
+
+            <div id="deploymentError" class="error hidden"></div>
+
+            <div class="output-grid">
+              <article class="output-card">
+                <h3>config.json</h3>
+                <pre id="configOutput"></pre>
+              </article>
+              <article class="output-card">
+                <h3>Dockerfile</h3>
+                <pre id="dockerfileOutput"></pre>
+              </article>
+              <article class="output-card">
+                <h3>docker-compose.yml</h3>
+                <pre id="composeOutput"></pre>
+              </article>
+              <article class="output-card">
+                <h3>Llama.cpp runtime-noter</h3>
+                <pre id="notesOutput"></pre>
+              </article>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="/static/hf-model-browser/app.js" defer></script>
+  </body>
+</html>

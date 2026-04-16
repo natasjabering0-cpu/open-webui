@@ -411,6 +411,12 @@
 
 	let loaded = false;
 	let recording = false;
+	let voiceRecordingElement;
+	let voiceInputMode: 'button' | 'space-hold' = 'button';
+	let spaceHoldTimeout: ReturnType<typeof setTimeout> | null = null;
+	let spaceHoldTriggered = false;
+	let spaceKeyDown = false;
+	let pendingSpaceRecordingStop = false;
 
 	let isComposing = false;
 	// Safari has a bug where compositionend is not triggered correctly #16615
@@ -867,6 +873,70 @@
 		dragged = false;
 	};
 
+	const clearSpaceHoldState = () => {
+		if (spaceHoldTimeout) {
+			clearTimeout(spaceHoldTimeout);
+			spaceHoldTimeout = null;
+		}
+
+		spaceKeyDown = false;
+		spaceHoldTriggered = false;
+		pendingSpaceRecordingStop = false;
+	};
+
+	const isPromptFieldFocused = () => {
+		const activeElement = document.activeElement;
+		return (
+			activeElement?.id === 'chat-input' ||
+			chatInputContainerElement?.contains(activeElement) ||
+			false
+		);
+	};
+
+	const canTriggerSpaceHoldRecording = (event: KeyboardEvent) => {
+		return (
+			!recording &&
+			!generating &&
+			!showInputModal &&
+			!showCommands &&
+			!inOrNearComposition(event) &&
+			(prompt ?? '').trim() === '' &&
+			isPromptFieldFocused() &&
+			($_user?.role === 'admin' || ($_user?.permissions?.chat?.stt ?? true))
+		);
+	};
+
+	const startVoiceRecording = async (mode: 'button' | 'space-hold') => {
+		try {
+			let stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch(function (err) {
+				toast.error(
+					$i18n.t(`Permission denied when accessing microphone: {{error}}`, {
+						error: err
+					})
+				);
+				return null;
+			});
+
+			if (stream) {
+				voiceInputMode = mode;
+				recording = true;
+				const tracks = stream.getTracks();
+				tracks.forEach((track) => track.stop());
+
+				await tick();
+
+				if (pendingSpaceRecordingStop && mode === 'space-hold' && voiceRecordingElement) {
+					pendingSpaceRecordingStop = false;
+					await voiceRecordingElement.finishRecording();
+				}
+			}
+
+			stream = null;
+		} catch {
+			toast.error($i18n.t('Permission denied when accessing microphone'));
+		}
+	};
+
 	const onKeyDown = (e: KeyboardEvent) => {
 		if (e.key === 'Shift') {
 			shiftKey = true;
@@ -889,11 +959,49 @@
 			console.log('Escape');
 			dragged = false;
 		}
+
+		if (
+			e.code === 'Space' &&
+			!e.repeat &&
+			!e.altKey &&
+			!e.ctrlKey &&
+			!e.metaKey &&
+			!e.shiftKey &&
+			!spaceKeyDown &&
+			canTriggerSpaceHoldRecording(e)
+		) {
+			e.preventDefault();
+			spaceKeyDown = true;
+			spaceHoldTimeout = setTimeout(async () => {
+				spaceHoldTriggered = true;
+				await startVoiceRecording('space-hold');
+			}, 2000);
+		}
 	};
 
-	const onKeyUp = (e: KeyboardEvent) => {
+	const onKeyUp = async (e: KeyboardEvent) => {
 		if (e.key === 'Shift') {
 			shiftKey = false;
+		}
+
+		if (e.code === 'Space') {
+			if (spaceHoldTimeout) {
+				clearTimeout(spaceHoldTimeout);
+				spaceHoldTimeout = null;
+			}
+
+			if (spaceHoldTriggered) {
+				e.preventDefault();
+
+				if (recording && voiceRecordingElement) {
+					await voiceRecordingElement.finishRecording();
+				} else {
+					pendingSpaceRecordingStop = true;
+				}
+			}
+
+			spaceKeyDown = false;
+			spaceHoldTriggered = false;
 		}
 	};
 
@@ -1064,6 +1172,7 @@
 
 		return () => {
 			isDestroyed = true;
+			clearSpaceHoldState();
 
 			window.removeEventListener('keydown', onKeyDown);
 			window.removeEventListener('keyup', onKeyUp);
@@ -1181,8 +1290,12 @@
 
 					<div class={recording ? '' : 'hidden'}>
 						<VoiceRecording
+							bind:this={voiceRecordingElement}
 							bind:recording
+							preferServerTranscription={voiceInputMode === 'space-hold'}
 							onCancel={async () => {
+								clearSpaceHoldState();
+								voiceInputMode = 'button';
 								recording = false;
 
 								await tick();
@@ -1191,6 +1304,8 @@
 							onConfirm={async (data) => {
 								const { text, filename } = data;
 
+								clearSpaceHoldState();
+								voiceInputMode = 'button';
 								recording = false;
 
 								await tick();
@@ -1366,6 +1481,7 @@
 
 							<div class="px-2.5">
 								<div
+									bind:this={chatInputContainerElement}
 									class="scrollbar-hidden rtl:text-right ltr:text-left bg-transparent dark:text-gray-100 outline-hidden w-full pb-1 px-1 resize-none h-fit max-h-96 overflow-auto {files.length ===
 									0
 										? atSelectedModel !== undefined
@@ -1878,36 +1994,13 @@
 
 											{#if $_user?.role === 'admin' || ($_user?.permissions?.chat?.stt ?? true)}
 												<!-- {$i18n.t('Record voice')} -->
-												<Tooltip content={$i18n.t('Dictate')}>
+												<Tooltip content={$i18n.t('Dictate (hold Space for 2 seconds)')}>
 													<button
 														id="voice-input-button"
 														class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 self-center mr-0.5"
 														type="button"
 														on:click={async () => {
-															try {
-																let stream = await navigator.mediaDevices
-																	.getUserMedia({ audio: true })
-																	.catch(function (err) {
-																		toast.error(
-																			$i18n.t(
-																				`Permission denied when accessing microphone: {{error}}`,
-																				{
-																					error: err
-																				}
-																			)
-																		);
-																		return null;
-																	});
-
-																if (stream) {
-																	recording = true;
-																	const tracks = stream.getTracks();
-																	tracks.forEach((track) => track.stop());
-																}
-																stream = null;
-															} catch {
-																toast.error($i18n.t('Permission denied when accessing microphone'));
-															}
+															await startVoiceRecording('button');
 														}}
 														aria-label="Voice Input"
 													>

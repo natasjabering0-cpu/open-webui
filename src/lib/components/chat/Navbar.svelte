@@ -22,6 +22,7 @@
 	import { goto } from '$app/navigation';
 
 	import ShareChatModal from '../chat/ShareChatModal.svelte';
+	import HFModelSpotlight from '../chat/HFModelSpotlight.svelte';
 	import ModelSelector from '../chat/ModelSelector.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import Menu from '$lib/components/layout/Navbar/Menu.svelte';
@@ -60,9 +61,12 @@
 
 	let showShareChatModal = false;
 	let showDownloadChatModal = false;
+	let showHFModelSpotlight = false;
+	let hfModelSpotlightPanel: 'browse' | 'deploy' = 'browse';
 </script>
 
 <ShareChatModal bind:show={showShareChatModal} chatId={$chatId} />
+<HFModelSpotlight bind:show={showHFModelSpotlight} initialPanel={hfModelSpotlightPanel} />
 
 <button
 	id="new-chat-button"
@@ -119,6 +123,47 @@
 
 				<div class="self-start flex flex-none items-center text-gray-600 dark:text-gray-400">
 					<!-- <div class="md:hidden flex self-center w-[1px] h-5 mx-2 bg-gray-300 dark:bg-stone-700" /> -->
+
+					<Tooltip content="HF Spotlight">
+						<button
+							class="flex cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition"
+							on:click={() => {
+								hfModelSpotlightPanel = 'browse';
+								showHFModelSpotlight = true;
+							}}
+							aria-label="HF Spotlight"
+						>
+							<div class="m-auto self-center text-[0.7rem] font-semibold tracking-wide">
+								HF
+							</div>
+						</button>
+					</Tooltip>
+
+					<Tooltip content={$i18n.t('Deploy')}>
+						<button
+							class="flex cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition"
+							on:click={() => {
+								hfModelSpotlightPanel = 'deploy';
+								showHFModelSpotlight = true;
+							}}
+							aria-label="Deploy"
+						>
+							<div class="m-auto self-center">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.7"
+									class="size-4.5"
+								>
+									<path stroke-linecap="round" stroke-linejoin="round" d="M5 19h14" />
+									<path stroke-linecap="round" stroke-linejoin="round" d="M12 5v10" />
+									<path stroke-linecap="round" stroke-linejoin="round" d="m8 11 4 4 4-4" />
+								</svg>
+							</div>
+						</button>
+					</Tooltip>
 
 					{#if $user?.role === 'user' ? ($user?.permissions?.chat?.temporary ?? true) && !($user?.permissions?.chat?.temporary_enforced ?? false) : true}
 						{#if !chat?.id}

@@ -16,6 +16,7 @@
 	export let recording = false;
 	export let transcribe = true;
 	export let displayMedia = false;
+	export let preferServerTranscription = false;
 
 	export let echoCancellation = true;
 	export let noiseSuppression = true;
@@ -150,7 +151,10 @@
 		const file = blobToFile(audioBlob, `Recording-${dayjs().format('L LT')}.${ext}`);
 
 		if (transcribe) {
-			if ($config.audio.stt.engine === 'web' || ($settings?.audio?.stt?.engine ?? '') === 'web') {
+			if (
+				!preferServerTranscription &&
+				($config.audio.stt.engine === 'web' || ($settings?.audio?.stt?.engine ?? '') === 'web')
+			) {
 				// with web stt, we don't need to send the file to the server
 				return;
 			}
@@ -262,7 +266,10 @@
 		}
 
 		if (transcribe) {
-			if ($config.audio.stt.engine === 'web' || ($settings?.audio?.stt?.engine ?? '') === 'web') {
+			if (
+				!preferServerTranscription &&
+				($config.audio.stt.engine === 'web' || ($settings?.audio?.stt?.engine ?? '') === 'web')
+			) {
 				if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
 					// Create a SpeechRecognition object
 					speechRecognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -360,6 +367,15 @@
 		}
 
 		stream = null;
+	};
+
+	export const finishRecording = async () => {
+		await confirmRecording();
+	};
+
+	export const abortRecording = async () => {
+		await stopRecording();
+		onCancel();
 	};
 
 	let resizeObserver;

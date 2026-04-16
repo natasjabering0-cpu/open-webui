@@ -84,6 +84,7 @@ from open_webui.routers import (
     folders,
     configs,
     groups,
+    hf_models,
     files,
     functions,
     memories,
@@ -787,6 +788,8 @@ app.state.OPENAI_MODELS = {}
 
 app.state.config.TOOL_SERVER_CONNECTIONS = TOOL_SERVER_CONNECTIONS
 app.state.TOOL_SERVERS = []
+app.state.MCP_CLIENTS = {}
+app.state.MCP_TOOL_SPECS = {}
 
 ########################################
 #
@@ -1496,6 +1499,7 @@ app.include_router(images.router, prefix='/api/v1/images', tags=['images'])
 
 app.include_router(audio.router, prefix='/api/v1/audio', tags=['audio'])
 app.include_router(retrieval.router, prefix='/api/v1/retrieval', tags=['retrieval'])
+app.include_router(hf_models.router, tags=['hf-models'])
 
 app.include_router(configs.router, prefix='/api/v1/configs', tags=['configs'])
 
