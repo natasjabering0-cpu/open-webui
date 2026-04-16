@@ -49,9 +49,9 @@ class AssistantTray:
         self._state_lock = threading.RLock()
         self._shutdown = threading.Event()
         self.icon = pystray.Icon(
-            "offline-assistant",
+            "knowledgecore",
             self._build_icon(),
-            "Offline Assistant",
+            "Knowledgecore",
             menu=self._build_menu(),
         )
         self._status_thread = threading.Thread(target=self._monitor_backend_status, daemon=True)
@@ -60,7 +60,7 @@ class AssistantTray:
     def _build_menu(self) -> pystray.Menu:
         return pystray.Menu(
             pystray.MenuItem(self.backend_status_label, self._noop, enabled=False),
-            pystray.MenuItem("Open WebUI", self.open_assistant, default=True),
+            pystray.MenuItem("Open Knowledgecore", self.open_assistant, default=True),
             pystray.MenuItem("Start Services", self.start_services),
             pystray.MenuItem("Stop Services", self.stop_services),
             pystray.MenuItem("Restart Services", self.restart_services),

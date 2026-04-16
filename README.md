@@ -1,4 +1,4 @@
-# Open WebUI 👋
+# Knowledgecore 👋
 
 ![GitHub stars](https://img.shields.io/github/stars/open-webui/open-webui?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/open-webui/open-webui?style=social)
@@ -12,7 +12,7 @@
 
 ![Open WebUI Banner](./banner.png)
 
-**Open WebUI is an [extensible](https://docs.openwebui.com/features/extensibility/plugin), feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline.** It supports various LLM runners like **Ollama** and **OpenAI-compatible APIs**, with **built-in inference engine** for RAG, making it a **powerful AI deployment solution**.
+**Knowledgecore is a [extensible](https://docs.openwebui.com/features/extensibility/plugin), feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline.** It supports various LLM runners like **Ollama** and **OpenAI-compatible APIs**, with **built-in inference engine** for RAG, making it a **powerful AI deployment solution**.
 
 Passionate about open-source AI? [Join our team →](https://careers.openwebui.com/)
 
@@ -87,23 +87,23 @@ We are incredibly grateful for the generous support of our sponsors. Their contr
 
 ### Installation via Python pip 🐍
 
-Open WebUI can be installed using pip, the Python package installer. Before proceeding, ensure you're using **Python 3.11** to avoid compatibility issues.
+Knowledgecore can be installed using pip, the Python package installer. Before proceeding, ensure you're using **Python 3.11** to avoid compatibility issues.
 
 1. **Install Open WebUI**:
-   Open your terminal and run the following command to install Open WebUI:
+   Open your terminal and run the following command to install Knowledgecore:
 
    ```bash
    pip install open-webui
    ```
 
 2. **Running Open WebUI**:
-   After installation, you can start Open WebUI by executing:
+After installation, you can start Knowledgecore by executing:
 
    ```bash
    open-webui serve
    ```
 
-This will start the Open WebUI server, which you can access at [http://localhost:8080](http://localhost:8080)
+This will start the Knowledgecore server, which you can access at [http://localhost:8080](http://localhost:8080)
 
 ### Quick Start with Docker 🐳
 
@@ -170,13 +170,13 @@ After installation, you can access Open WebUI at [http://localhost:3000](http://
 
 ### Windows Installer
 
-For the local tray app and Open WebUI setup on a clean Windows machine, run:
+For the local tray app and Knowledgecore setup on a clean Windows machine, run:
 
 ```bat
 install-windows.bat
 ```
 
-It bootstraps Python and Node.js with `winget` when they are missing, installs the local environment, builds the frontend, downloads the default GGUF model automatically if it is missing, and creates shortcuts for **Legend Tray** and **Open WebUI Server**. The tray app opens WebUI on double click, shows backend connection state in its menu, and exits cleanly from the tray menu. Use `install-windows.bat cuda` if you want the CUDA-flavored llama backend; the installer will also try to install the NVIDIA CUDA Toolkit plus the build tools it needs, but a matching NVIDIA display driver still has to be present on the machine.
+It bootstraps Python and Node.js with `winget` when they are missing, installs the local environment, builds the frontend, downloads the default GGUF model automatically if it is missing, and creates shortcuts for **Knowledgecore Tray** and **Knowledgecore Server**. The tray app opens Knowledgecore on double click, shows backend connection state in its menu, and exits cleanly from the tray menu. Use `install-windows.bat cuda` if you want the CUDA-flavored llama backend; the installer will also try to install the NVIDIA CUDA Toolkit plus the build tools it needs, but a matching NVIDIA display driver still has to be present on the machine.
 
 ### Other Installation Methods
 

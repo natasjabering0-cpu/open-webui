@@ -345,26 +345,26 @@ $venvPython = Get-VenvPython
 $venvPythonw = Join-Path $Root 'venv\Scripts\pythonw.exe'
 
 $desktop = [Environment]::GetFolderPath('Desktop')
-$startMenu = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Legend AI'
+$startMenu = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Knowledgecore'
 $startup = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Startup'
 
 foreach ($folder in @($startMenu)) {
     New-Item -ItemType Directory -Path $folder -Force | Out-Null
 }
 
-$trayShortcut = Join-Path $desktop 'Legend Tray.lnk'
-$serverShortcut = Join-Path $desktop 'Open WebUI Server.lnk'
-$trayStartMenuShortcut = Join-Path $startMenu 'Legend Tray.lnk'
-$serverStartMenuShortcut = Join-Path $startMenu 'Open WebUI Server.lnk'
+$trayShortcut = Join-Path $desktop 'Knowledgecore Tray.lnk'
+$serverShortcut = Join-Path $desktop 'Knowledgecore Server.lnk'
+$trayStartMenuShortcut = Join-Path $startMenu 'Knowledgecore Tray.lnk'
+$serverStartMenuShortcut = Join-Path $startMenu 'Knowledgecore Server.lnk'
 
-New-Shortcut -ShortcutPath $trayShortcut -TargetPath $venvPythonw -Arguments 'tray_assistant.py' -WorkingDirectory $Root -Description 'Start the tray app and Open WebUI' -IconLocation "$venvPythonw,0"
-New-Shortcut -ShortcutPath $serverShortcut -TargetPath $venvPython -Arguments 'run-local.py' -WorkingDirectory $Root -Description 'Start Open WebUI directly' -IconLocation "$venvPython,0"
-New-Shortcut -ShortcutPath $trayStartMenuShortcut -TargetPath $venvPythonw -Arguments 'tray_assistant.py' -WorkingDirectory $Root -Description 'Start the tray app and Open WebUI' -IconLocation "$venvPythonw,0"
-New-Shortcut -ShortcutPath $serverStartMenuShortcut -TargetPath $venvPython -Arguments 'run-local.py' -WorkingDirectory $Root -Description 'Start Open WebUI directly' -IconLocation "$venvPython,0"
+New-Shortcut -ShortcutPath $trayShortcut -TargetPath $venvPythonw -Arguments 'tray_assistant.py' -WorkingDirectory $Root -Description 'Start the Knowledgecore tray app' -IconLocation "$venvPythonw,0"
+New-Shortcut -ShortcutPath $serverShortcut -TargetPath $venvPython -Arguments 'run-local.py' -WorkingDirectory $Root -Description 'Start Knowledgecore directly' -IconLocation "$venvPython,0"
+New-Shortcut -ShortcutPath $trayStartMenuShortcut -TargetPath $venvPythonw -Arguments 'tray_assistant.py' -WorkingDirectory $Root -Description 'Start the Knowledgecore tray app' -IconLocation "$venvPythonw,0"
+New-Shortcut -ShortcutPath $serverStartMenuShortcut -TargetPath $venvPython -Arguments 'run-local.py' -WorkingDirectory $Root -Description 'Start Knowledgecore directly' -IconLocation "$venvPython,0"
 
 if ($RegisterStartup) {
-    $startupShortcut = Join-Path $startup 'Legend Tray.lnk'
-    New-Shortcut -ShortcutPath $startupShortcut -TargetPath $venvPythonw -Arguments 'tray_assistant.py' -WorkingDirectory $Root -Description 'Start the tray app and Open WebUI on login' -IconLocation "$venvPythonw,0"
+    $startupShortcut = Join-Path $startup 'Knowledgecore Tray.lnk'
+    New-Shortcut -ShortcutPath $startupShortcut -TargetPath $venvPythonw -Arguments 'tray_assistant.py' -WorkingDirectory $Root -Description 'Start the Knowledgecore tray app on login' -IconLocation "$venvPythonw,0"
 }
 
 if ($LaunchAfterInstall) {

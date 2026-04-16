@@ -102,13 +102,13 @@ def main() -> int:
                     "repeat_penalty": 1.1,
                 }
             ),
-            "WEBUI_NAME": env.get("WEBUI_NAME", "Offline AI Workspace"),
+            "WEBUI_NAME": env.get("WEBUI_NAME", "Knowledgecore"),
             "HOST": env.get("HOST", "0.0.0.0"),
             "PORT": port,
         }
     )
 
-    print(f"Starting local Open WebUI on http://localhost:{port}")
+    print(f"Starting Knowledgecore on http://localhost:{port}")
     print(f"Model: {model_name} ({model})")
     if nvidia_gpu:
         print("GPU mode: NVIDIA detected, using llama.cpp CUDA-friendly defaults")
